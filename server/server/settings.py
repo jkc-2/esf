@@ -9,26 +9,32 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+from os import environ
 from pathlib import Path
+from re import A
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+from django.core.management.utils import get_random_secret_key
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
+######################################################################
+# General
+######################################################################
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = environ.get("SECRET_KEY", get_random_secret_key())
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-bd@-@sp2==-phm+b2b=e8&2qfp$jwm1nh_#=uf6rkvg#ez(i3-'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "api", "127.0.0.1"]
 
-# Application definition
+ROOT_URLCONF = 'server.urls'
 
+WSGI_APPLICATION = 'server.wsgi.application'
+
+######################################################################
+# Apps
+######################################################################
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -36,12 +42,36 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "calcprojet",
+
+    # third party    
     'corsheaders',
     'rest_framework',
     'drf_spectacular',
+
+    # authentification
+    'rest_framework_simplejwt',
+
+    # local
+    "calcprojet",
 ]
 
+######################################################################
+# Rest Framework
+######################################################################
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        "rest_framework.authentication.SessionAuthentication",
+    )
+}
+
+######################################################################
+# Middleware
+######################################################################
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -53,11 +83,10 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-REST_FRAMEWORK = {
-    # YOUR SETTINGS
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
 
+######################################################################
+# Swagger UI
+######################################################################
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',
     'DESCRIPTION': 'Your project description',
@@ -66,8 +95,10 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-ROOT_URLCONF = 'server.urls'
 
+######################################################################
+# Templates
+######################################################################
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -84,12 +115,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'server.wsgi.application'
-
-
+######################################################################
 # Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
+######################################################################
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -97,9 +125,22 @@ DATABASES = {
     }
 }
 
+######################################################################
+# Authentication
+######################################################################
+AUTH_USER_MODEL = "calcprojet.User"
 
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
+from datetime import timedelta
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    # "USER_ID_FIELD": "userId",
+    # "USER_ID_CLAIM": "user_id",
+    # "SIGNING_KEY": "test_key"
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -122,21 +163,21 @@ CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',
 )
 
+######################################################################
 # Internationalization
-# https://docs.djangoproject.com/en/5.0/topics/i18n/
+######################################################################
+LANGUAGE_CODE = "en-us"
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-
+######################################################################
+# Staticfiles
+######################################################################
 STATIC_URL = 'static/'
 
 # Default primary key field type

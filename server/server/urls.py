@@ -16,24 +16,28 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView
-from drf_spectacular.views import SpectacularRedocView, SpectacularSwaggerView
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-# import views from todo
-from calcprojet import views
- 
-# import routers from the REST framework
-# it is necessary for routing
 from rest_framework import routers
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
+
+from calcprojet import views
 
 # create a router object
 router = routers.DefaultRouter()
  
 # register the router
-router.register(r'project', views.ProjectView, 'project')
+router.register("project", views.ProjectView, 'project')
+router.register("users", views.UserView, basename="api-users")
  
-urlpatterns = [
+urlpatterns = [    
     path('admin/', admin.site.urls),
+
+    # API
     path('api/', include(router.urls)),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path(
@@ -46,4 +50,9 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name='schema'), 
         name='redoc'
     ),
+
+    # Authentication
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 ]
